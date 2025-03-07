@@ -1,6 +1,8 @@
+#This program is for extracting Image from PDF 
+# *REQUIRMENTS* U need to Enter a PATH or pdf name that u need to be extracted.
 import fitz  # PyMuPDF
 import os
-doc = fitz.open("example.1.pdf")
+doc = fitz.open("example.1.pdf") # --add your file name with path here--
 for page_number, page in enumerate(doc, start=1):
     images = page.get_images(full=True)
     for img_index, img in enumerate(images, start=1):
