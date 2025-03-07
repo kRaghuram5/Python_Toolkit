@@ -1,16 +1,8 @@
-#4. PDF to Other Formats PDF to Image
+# This is For Converting PDF to Images
+# --REQUIRMENTS **A PDF file that u need to convert to images 
 import fitz  # PyMuPDF
 
-doc = fitz.open("example.pdf")
-with open("output.txt", "w", encoding="utf-8") as f:
-    for page in doc:
-        text = page.get_text()
-        f.write(text + "\n")
-
-print("PDF converted to Text successfully!")
-import fitz  # PyMuPDF
-
-doc = fitz.open("E:\\DSA OEE.pdf")
+doc = fitz.open("example.pdf") #--Enter your name of pdf file or path of file here
 for page_num, page in enumerate(doc, start=1):
     pix = page.get_pixmap()
     pix.save(f"page_{page_num}.png")
