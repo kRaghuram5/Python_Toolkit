@@ -1,7 +1,9 @@
+#This is to convert text to pdf 
+# --REQUIRMENTS ** TEXT FILE  to be converted to pdf **
 from reportlab.pdfgen import canvas
 
-text_file = "output.txt"
-pdf_file = "output1.pdf"
+text_file = "example.txt" #Enter your Text file to be converted
+pdf_file = "example.pdf" # Enter the pdf name to be created
 
 c = canvas.Canvas(pdf_file)
 with open(text_file, "r", encoding="utf-8") as f:
