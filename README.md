@@ -7,3 +7,4 @@ This is a Python-based toolkit for various PDF operations like conversion, extra
 - Convert Word, Text, and Image to PDF  
 - Reverse PDF pages  
 - Extract images from PDF  
+- Merge Multiple PDF into Single PDF 
