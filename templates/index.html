@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Toolkit - Universal File Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-file-pdf"></i>
+                    <h1>PDF Toolkit</h1>
+                </div>
+                <p class="tagline">Universal File Converter - Convert, Merge, Extract & More</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Operations Grid -->
+            <section class="operations-section">
+                <h2 class="section-title">Choose Your Operation</h2>
+                <div class="operations-grid" id="operationsGrid">
+                    <!-- Operations will be loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection" style="display: none;">
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <h3 id="operationTitle">Upload Your Files</h3>
+                        <button class="btn-back" onclick="resetOperation()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Drag & Drop Your Files Here</h3>
+                        <p>or</p>
+                        <label for="fileInput" class="btn-upload">
+                            <i class="fas fa-folder-open"></i> Browse Files
+                        </label>
+                        <input type="file" id="fileInput" multiple hidden>
+                        <p class="upload-hint" id="uploadHint">Accepted file types will be shown here</p>
+                    </div>
+
+                    <div class="files-preview" id="filesPreview"></div>
+
+                    <div class="upload-actions">
+                        <button class="btn-primary" id="convertBtn" onclick="convertFiles()" disabled>
+                            <i class="fas fa-magic"></i> Convert Now
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <div class="progress-icon">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <h3>Processing Your Files...</h3>
+                    <p id="progressMessage">Please wait while we convert your files</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Result Section -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-icon success" id="resultIcon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 id="resultTitle">Conversion Successful!</h3>
+                    <p id="resultMessage">Your file is ready to download</p>
+                    <div class="result-actions">
+                        <a class="btn-download" id="downloadBtn" href="#" download>
+                            <i class="fas fa-download"></i> Download File
+                        </a>
+                        <button class="btn-secondary" onclick="resetOperation()">
+                            <i class="fas fa-redo"></i> Convert Another File
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Why Choose PDF Toolkit?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure & Private</h3>
+                    <p>Your files are processed locally and automatically deleted after 1 hour</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Fast Processing</h3>
+                    <p>Quick conversions with optimized algorithms</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-universal-access"></i>
+                    </div>
+                    <h3>Easy to Use</h3>
+                    <p>Simple drag-and-drop interface, no technical knowledge required</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>Free & Unlimited</h3>
+                    <p>Convert as many files as you want, completely free</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 PDF Toolkit. All rights reserved.</p>
+            <p>Built with ❤️ using Flask & Python</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
