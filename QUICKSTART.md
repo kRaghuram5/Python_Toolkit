@@ -1,217 +1,197 @@
-# 🚀 Quick Start Guide - PDF Toolkit
+# Quick Start Guide
 
-Get up and running in 5 minutes!
+## Project Overview
 
-## Prerequisites Check
+This is a **Full-Stack PDF Toolkit** with:
+- **Backend:** Python Flask REST API with PDF/document conversion operations
+- **Frontend:** Modern React UI with real-time feedback and drag-drop file upload
 
-Before starting, ensure you have:
-- ✅ Python 3.8 or higher
-- ✅ pip (Python package manager)
-- ✅ Git (optional, for cloning)
+## Directory Structure
 
-Check your Python version:
-```bash
-python --version
+```
+Python_Toolkit/
+├── backend/                    # Python Flask API (Port 5000)
+│   ├── app.py                 # Main Flask application
+│   ├── utils/pdf_converter.py # All conversion logic
+│   ├── uploads/               # Temp uploads
+│   ├── outputs/               # Converted files
+│   └── [conversion scripts]
+│
+├── client/                     # React Frontend (Port 3000)
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── api.js             # Backend API client
+│   │   └── App.js
+│   ├── package.json
+│   └── .env (API_URL config)
+│
+└── [Config files]
 ```
 
-## Installation (Choose One Method)
+## Installation & Running (Windows PowerShell)
 
-### 🎯 Method 1: Automatic Setup (Easiest - Recommended)
+### 1. Backend Setup
 
-```bash
-# 1. Download/Clone the repository
-git clone https://github.com/kRaghuram5/Python_Toolkit.git
-cd Python_Toolkit
-
-# 2. Run setup script
-python setup.py
-
-# 3. Start the application
-python app.py
-
-# 4. Open browser
-# Navigate to: http://localhost:5000
-```
-
-That's it! 🎉
-
----
-
-### 🛠️ Method 2: Manual Setup
-
-```bash
-# 1. Clone repository
-git clone https://github.com/kRaghuram5/Python_Toolkit.git
-cd Python_Toolkit
-
-# 2. Create virtual environment (recommended)
+```powershell
+cd backend
 python -m venv venv
-
-# 3. Activate virtual environment
-# On Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# On Windows (CMD):
-venv\Scripts\activate.bat
-# On macOS/Linux:
-source venv/bin/activate
-
-# 4. Install dependencies
+venv\Scripts\activate
 pip install -r requirements.txt
-
-# 5. Copy environment file
-copy .env.example .env  # Windows
-cp .env.example .env    # macOS/Linux
-
-# 6. Run application
 python app.py
-
-# 7. Open browser
-# Navigate to: http://localhost:5000
 ```
 
----
+Backend runs on: `http://localhost:5000`
 
-## 🎮 Using the Application
+### 2. Frontend Setup (New PowerShell Terminal)
 
-### Step 1: Choose Operation
-- Click on any operation card (e.g., "PDF to Word")
-
-### Step 2: Upload Files
-- Drag and drop your file(s) into the upload area, OR
-- Click "Browse Files" to select files
-
-### Step 3: Convert
-- Click the "Convert Now" button
-- Wait for processing to complete
-
-### Step 4: Download
-- Click "Download File" to save your converted file
-- Click "Convert Another File" to start over
-
----
-
-## 📋 Available Operations
-
-| Operation | Input | Output | Multiple Files? |
-|-----------|-------|--------|-----------------|
-| PDF to Word | PDF | DOCX | No |
-| PDF to Text | PDF | TXT | No |
-| PDF to Images | PDF | ZIP (Images) | No |
-| Word to PDF | DOCX | PDF | No |
-| Text to PDF | TXT | PDF | No |
-| Images to PDF | Images | PDF | Yes |
-| Extract Images | PDF | ZIP (Images) | No |
-| Reverse PDF | PDF | PDF | No |
-| Merge PDFs | PDF | PDF | Yes |
-
----
-
-## ⚙️ Configuration
-
-### Change Port
-Edit `.env` file:
-```env
-PORT=8000  # Change from 5000 to 8000
+```powershell
+cd client
+npm install
+npm start
 ```
 
-### Change Upload Size Limit
-Edit `.env` file:
-```env
-MAX_CONTENT_LENGTH=104857600  # 100MB in bytes
+Frontend opens at: `http://localhost:3000`
+
+## Available Operations
+
+| Operation | Input | Output | Notes |
+|-----------|-------|--------|-------|
+| PDF to Word | PDF | DOCX | Converts PDF to editable Word document |
+| PDF to Text | PDF | TXT | Extracts text content from PDF |
+| PDF to Images | PDF | ZIP | Converts pages to images (PNG) |
+| Word to PDF | DOCX | PDF | Converts Word to PDF |
+| Text to PDF | TXT | PDF | Converts text file to PDF |
+| Images to PDF | PNG/JPG | PDF | Combines multiple images into PDF |
+| Extract Images | PDF | ZIP | Extracts all images from PDF |
+| Reverse PDF | PDF | PDF | Reverses page order |
+| Merge PDFs | PDF(s) | PDF | Merges multiple PDFs |
+
+## API Endpoints
+
+```
+GET  /                       # API info
+GET  /api/operations         # List all operations
+POST /api/convert            # Convert files
+GET  /api/download/<file>    # Download converted file
 ```
 
-### Enable/Disable Debug Mode
-Edit `.env` file:
-```env
-DEBUG=False  # Set to False for production
+## Environment Configuration
+
+### Backend (.env or app.py)
+```python
+FLASK_ENV=development
+MAX_CONTENT_LENGTH=50MB      # Max upload size
+SECRET_KEY=your-secret-key
 ```
 
----
-
-## 🔧 Troubleshooting
-
-### Problem: Port 5000 already in use
-**Solution:**
-```bash
-# Change port in .env file to 8000 or any other port
-# OR find and kill process using port 5000
+### Frontend (client/.env)
+```
+REACT_APP_API_URL=http://localhost:5000
 ```
 
-### Problem: Module not found errors
-**Solution:**
-```bash
-pip install -r requirements.txt
+For production:
+```
+REACT_APP_API_URL=https://your-api.com
 ```
 
-### Problem: Permission denied for uploads/outputs
-**Solution:**
-```bash
-# On Windows (PowerShell as Admin)
-icacls uploads /grant Users:F
-icacls outputs /grant Users:F
+## Deployment
 
-# On macOS/Linux
-chmod 755 uploads outputs
-```
+### Backend
+Deploy the `backend/` folder to:
+- **Heroku** (free tier available)
+- **Render.com** (free tier available)
+- **Replit.com** (free tier available)
+- **AWS Elastic Beanstalk**
+- **DigitalOcean**
+- **Railway.app**
 
-### Problem: Word to PDF not working
-**Solution:**
-The application will try to use `docx2pdf` (cross-platform). If that doesn't work:
-- On Windows: Install Microsoft Word
-- On macOS/Linux: Install LibreOffice
+### Frontend
+Build and deploy to:
+- **Vercel** (Recommended for Next.js/React)
+- **Netlify** (GitHub integration)
+- **AWS S3 + CloudFront**
+- **Firebase Hosting**
 
----
+### Steps
 
-## 📱 Accessing from Other Devices
-
-To access the application from other devices on your network:
-
-1. Find your computer's IP address:
+1. **Build frontend:**
    ```bash
-   # Windows
-   ipconfig
-   
-   # macOS/Linux
-   ifconfig
+   cd client
+   npm run build
    ```
 
-2. On other devices, navigate to:
+2. **Deploy backend** to server with environment variables
+
+3. **Update frontend API URL** in `client/.env` to production backend
+
+4. **Deploy frontend** build folder to static hosting
+
+## Features
+
+✅ **Drag & Drop Upload** - Intuitive file selection
+✅ **Real-time Progress** - Visual feedback during conversion
+✅ **Multiple File Support** - For merge and image operations
+✅ **Error Handling** - Clear error messages
+✅ **Auto Cleanup** - Old files removed every 1 hour
+✅ **CORS Enabled** - Works with separate frontend
+✅ **Responsive Design** - Works on mobile and desktop
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Backend Disconnected | Check Flask is running on port 5000 |
+| CORS Error | Ensure Flask-CORS is installed |
+| Large File Upload | Check MAX_CONTENT_LENGTH in app.py (default 50MB) |
+| PDF to Word fails | PyMuPDF version conflict - use PDF to Text instead |
+| Port Already in Use | Change port in app.py or close existing process |
+
+## Development Workflow
+
+1. **Terminal 1 - Backend:**
+   ```bash
+   cd backend && python app.py
    ```
-   http://YOUR_IP_ADDRESS:5000
+
+2. **Terminal 2 - Frontend:**
+   ```bash
+   cd client && npm start
    ```
 
-Example: `http://192.168.1.100:5000`
+3. **Edit code** - Both hot-reload automatically (frontend requires page refresh sometimes)
 
----
+4. **Test** - UI at localhost:3000, API at localhost:5000
 
-## 🛑 Stopping the Application
+## Performance Notes
 
-Press `Ctrl + C` in the terminal where the app is running.
+- **Max upload:** 50MB (configurable)
+- **Auto cleanup:** Files older than 1 hour deleted
+- **Processing:** Depends on file size and operation
+- **Memory:** Monitor for large batch operations
 
----
+## Security Considerations
 
-## 🚀 Next Steps
+⚠️ **Development Mode**: Change SECRET_KEY in production
+⚠️ **CORS**: Restrict to your domain in production
+⚠️ **File Upload**: Validate file types on backend
+⚠️ **No Authentication**: Add user auth for production use
 
-- **Deploy to Production**: See [DEPLOYMENT.md](DEPLOYMENT.md)
-- **Contribute**: See [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Report Issues**: [GitHub Issues](https://github.com/kRaghuram5/Python_Toolkit/issues)
+## Next Steps
 
----
+1. ✅ Run both servers
+2. ✅ Test conversions in UI
+3. ✅ Deploy backend to server
+4. ✅ Build and deploy frontend
+5. ✅ Update API URL for production
+6. ✅ Add authentication (optional)
+7. ✅ Add monitoring/logging (optional)
 
-## 💡 Tips
+## Support & Updates
 
-1. **Files are automatically deleted after 1 hour** for security
-2. **Maximum file size is 50MB** by default
-3. **Use modern browsers** (Chrome, Firefox, Edge) for best experience
-4. **Keep the terminal window open** while using the application
-
----
-
-## 📞 Need Help?
-
-- 📖 Read the full [README.md](README.md)
-- 🐛 Report bugs on [GitHub Issues](https://github.com/kRaghuram5/Python_Toolkit/issues)
-- 💬 Check existing issues for solutions
+- Check browser console for errors
+- Check Flask console for backend errors
+- Review error messages displayed in UI
+- See logs in uploads/outputs folders
 
 ---
 

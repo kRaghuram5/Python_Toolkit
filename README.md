@@ -1,356 +1,251 @@
-# 🚀 PDF Toolkit - Universal File Converter
+# PDF Toolkit - Full Stack Application
 
-A powerful, modern web application for PDF operations built with Flask and Python. Convert, merge, extract, and modify PDF files with an intuitive drag-and-drop interface.
+A complete PDF and document conversion toolkit with a Python Flask backend and React frontend.
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![Flask](https://img.shields.io/badge/Flask-3.0.0-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+## Project Structure
 
-## ✨ Features
+```
+Python_Toolkit/
+├── backend/                 # Python Flask API
+│   ├── app.py              # Main Flask application
+│   ├── utils/              # PDF conversion utilities
+│   │   ├── pdf_converter.py
+│   │   └── __init__.py
+│   ├── uploads/            # Temporary upload directory
+│   ├── outputs/            # Converted files directory
+│   ├── requirements.txt     # Python dependencies
+│   └── [various conversion scripts]
+│
+├── client/                  # React frontend
+│   ├── public/             # Static assets
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── api.js          # API client
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   └── [CSS files]
+│   ├── package.json
+│   └── .env
+│
+├── legacy_scripts/         # Legacy Python scripts
+├── venv/                   # Python virtual environment
+└── [Config files]
+```
 
-### 📄 PDF Conversions
-- **PDF to Word** - Convert PDF files to editable Word documents (.docx)
-- **PDF to Text** - Extract text content from PDF files
-- **PDF to Images** - Convert each PDF page into high-quality images (PNG)
+## Features
 
-### 📝 Document to PDF
-- **Word to PDF** - Convert Word documents to PDF format
-- **Text to PDF** - Transform plain text files into formatted PDFs
-- **Images to PDF** - Combine multiple images into a single PDF document
+### Available Operations
+- **PDF to Word** - Convert PDF files to editable Word documents
+- **PDF to Text** - Extract text content from PDFs
+- **PDF to Images** - Convert PDF pages to image files (ZIP)
+- **Word to PDF** - Convert Word documents to PDF
+- **Text to PDF** - Convert text files to PDF
+- **Images to PDF** - Combine multiple images into a single PDF
+- **Extract Images** - Extract all images from a PDF (ZIP)
+- **Reverse PDF** - Reverse the page order of a PDF
+- **Merge PDFs** - Combine multiple PDF files into one
 
-### 🔧 PDF Operations
-- **Extract Images** - Extract all embedded images from PDF files
-- **Reverse PDF** - Reverse the page order of any PDF document
-- **Merge PDFs** - Combine multiple PDF files into one document
+## Setup & Installation
 
-## 🎨 User Interface
+### Prerequisites
+- Python 3.8+ (backend)
+- Node.js 14+ (frontend)
+- npm or yarn (frontend package manager)
 
-- **Modern & Intuitive** - Beautiful gradient design with smooth animations
-- **Drag & Drop** - Simply drag files to upload them
-- **Real-time Progress** - Track your conversion progress
-- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
-- **No Installation Required** - Just run and access via browser
+### Backend Setup
 
-## 🛠️ Tech Stack
-
-- **Backend**: Flask (Python)
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **PDF Processing**: PyPDF2, PyMuPDF (Fitz), pdf2docx
-- **Image Processing**: Pillow (PIL)
-- **Document Generation**: ReportLab
-
-## 📋 Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package manager)
-- For Word to PDF conversion (Windows): Microsoft Word installed OR docx2pdf package
-
-## 🚀 Quick Start
-
-### Method 1: Automated Setup (Recommended)
-
-1. **Clone the repository**
+1. **Navigate to backend directory:**
    ```bash
-   git clone https://github.com/kRaghuram5/Python_Toolkit.git
-   cd Python_Toolkit
+   cd backend
    ```
 
-2. **Run the setup script**
-   ```bash
-   python setup.py
-   ```
-
-3. **Start the application**
-   ```bash
-   python app.py
-   ```
-
-4. **Open your browser**
-   ```
-   Navigate to: http://localhost:5000
-   ```
-
-### Method 2: Manual Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/kRaghuram5/Python_Toolkit.git
-   cd Python_Toolkit
-   ```
-
-2. **Create a virtual environment (recommended)**
+2. **Create virtual environment:**
    ```bash
    python -m venv venv
-   
-   # On Windows
-   venv\Scripts\activate
-   
-   # On macOS/Linux
-   source venv/bin/activate
+   venv\Scripts\activate  # Windows
+   source venv/bin/activate  # Linux/Mac
    ```
 
-3. **Install dependencies**
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Create environment file**
-   ```bash
-   # Copy the example environment file
-   copy .env.example .env  # Windows
-   cp .env.example .env    # macOS/Linux
-   ```
-
-5. **Run the application**
+4. **Run the Flask server:**
    ```bash
    python app.py
    ```
+   Backend will be available at `http://localhost:5000`
 
-6. **Access the application**
+### Frontend Setup
+
+1. **Navigate to client directory:**
+   ```bash
+   cd client
    ```
-   Open http://localhost:5000 in your browser
+
+2. **Install dependencies:**
+   ```bash
+   npm install
    ```
 
-## 📁 Project Structure
+3. **Start the React development server:**
+   ```bash
+   npm start
+   ```
+   Frontend will open at `http://localhost:3000`
 
-```
-Python_Toolkit/
-├── app.py                  # Main Flask application
-├── requirements.txt        # Python dependencies
-├── setup.py               # Automated setup script
-├── .env.example           # Environment variables template
-├── .gitignore             # Git ignore rules
-├── README.md              # This file
-│
-├── utils/                 # Utility modules
-│   ├── __init__.py
-│   └── pdf_converter.py   # PDF conversion functions
-│
-├── static/                # Static files (CSS, JS, images)
-│   ├── style.css          # Application styles
-│   └── script.js          # Frontend JavaScript
-│
-├── templates/             # HTML templates
-│   └── index.html         # Main page template
-│
-├── uploads/               # Temporary uploaded files (auto-created)
-└── outputs/               # Converted files (auto-created)
-```
+## API Endpoints
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Edit the `.env` file to configure the application:
-
-```env
-# Flask Configuration
-FLASK_APP=app.py
-FLASK_ENV=development
-SECRET_KEY=your-secret-key-here
-
-# Server Configuration
-HOST=0.0.0.0
-PORT=5000
-
-# File Upload Configuration
-MAX_CONTENT_LENGTH=52428800  # 50MB
-UPLOAD_FOLDER=uploads
-OUTPUT_FOLDER=outputs
-
-# File Cleanup
-FILE_RETENTION_TIME=3600  # 1 hour in seconds
-```
-
-## 🌐 API Endpoints
-
-### Get Available Operations
+### 1. Get Operations List
 ```
 GET /api/operations
 ```
-Returns a list of all available conversion operations.
+Returns all available conversion operations.
 
-### Convert Files
+### 2. Convert Files
 ```
 POST /api/convert
-```
-**Form Data:**
-- `files`: File(s) to convert
-- `operation`: Operation ID (e.g., 'pdf_to_word')
+Content-Type: multipart/form-data
 
-### Download File
-```
-GET /api/download/<filename>
-```
-Download the converted file.
-
-## 🐳 Docker Deployment (Optional)
-
-Create a `Dockerfile`:
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-RUN mkdir -p uploads outputs
-
-EXPOSE 5000
-
-CMD ["python", "app.py"]
+Parameters:
+- files: File(s) to convert
+- operation: Operation ID (e.g., 'pdf_to_text')
 ```
 
-Build and run:
-```bash
-docker build -t pdf-toolkit .
-docker run -p 5000:5000 pdf-toolkit
+### 3. Download File
+```
+GET /api/download/{filename}
+```
+Download a converted file.
+
+## Environment Variables
+
+### Backend (.env)
+```
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-change-in-production
 ```
 
-## ☁️ Deployment Options
-
-### 1. Heroku
-
-```bash
-# Install Heroku CLI and login
-heroku login
-
-# Create app
-heroku create your-app-name
-
-# Add buildpack
-heroku buildpacks:add --index 1 heroku/python
-
-# Deploy
-git push heroku main
+### Frontend (client/.env)
+```
+REACT_APP_API_URL=http://localhost:5000
 ```
 
-### 2. AWS EC2
+For production:
+```
+REACT_APP_API_URL=https://your-backend-domain.com
+```
 
-1. Launch an EC2 instance (Ubuntu recommended)
-2. SSH into the instance
-3. Install Python and dependencies
-4. Clone the repository
-5. Run the application with gunicorn:
+## Deployment
+
+### Backend Deployment (Python Flask)
+1. **Heroku:**
    ```bash
-   pip install gunicorn
-   gunicorn -w 4 -b 0.0.0.0:5000 app:app
+   git push heroku main
    ```
 
-### 3. DigitalOcean App Platform
+2. **AWS/DigitalOcean/Render:**
+   - Deploy the `backend` folder
+   - Set environment variables
+   - Run `pip install -r requirements.txt`
+   - Run `python app.py` or use a WSGI server (Gunicorn)
 
-1. Connect your GitHub repository
-2. Select Python as the environment
-3. Set build command: `pip install -r requirements.txt`
-4. Set run command: `python app.py`
-5. Deploy!
+### Frontend Deployment (React)
+1. **Build the React app:**
+   ```bash
+   cd client
+   npm run build
+   ```
 
-### 4. Render
+2. **Deploy to static hosting:**
+   - **Vercel:** Push to GitHub, connect repository to Vercel
+   - **Netlify:** Push to GitHub, connect repository to Netlify
+   - **AWS S3:** Upload `build` folder to S3
+   - **Firebase Hosting:** Use Firebase CLI
 
-1. Create a new Web Service
-2. Connect your GitHub repository
-3. Set environment to Python 3
-4. Build command: `pip install -r requirements.txt`
-5. Start command: `gunicorn app:app`
+3. **Update API URL:**
+   - Modify `REACT_APP_API_URL` in `.env` to point to production backend
 
-### 5. PythonAnywhere
+## Important Notes
 
-1. Create a free account
-2. Upload your code
-3. Create a new web app
-4. Configure WSGI file
-5. Install requirements in console
+### Deployment Strategy
+- **Backend and Frontend deploy separately**
+- Backend: Server (Heroku, Render, AWS, DigitalOcean, etc.)
+- Frontend: Static hosting (Vercel, Netlify, S3, Firebase, etc.)
+- Frontend communicates with backend via CORS-enabled REST API
 
-## 🔒 Security Considerations
+### CORS Configuration
+The Flask backend is configured with CORS enabled for all origins during development. For production:
+```python
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["https://your-frontend-domain.com"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+```
 
-- Files are automatically deleted after 1 hour
-- Maximum file size is limited to 50MB
-- CORS is enabled (configure as needed for production)
-- Change the SECRET_KEY in production
-- Use HTTPS in production
-- Consider implementing user authentication
-- Add rate limiting for API endpoints
+### File Upload Limits
+- Default: 50MB max file size
+- Configured in `backend/app.py`: `MAX_CONTENT_LENGTH`
 
-## 🎯 Usage Examples
+### Cleanup
+- Uploaded and output files older than 1 hour are automatically deleted
+- Cleanup runs every 30 minutes in a background thread
 
-### Convert PDF to Word
-1. Select "PDF to Word" operation
-2. Upload your PDF file
-3. Click "Convert Now"
-4. Download the generated Word document
+## Troubleshooting
 
-### Merge Multiple PDFs
-1. Select "Merge PDFs" operation
-2. Upload multiple PDF files
-3. Click "Convert Now"
-4. Download the merged PDF
+### "Backend Disconnected" in UI
+- Ensure Flask server is running on `http://localhost:5000`
+- Check CORS configuration
+- Verify `REACT_APP_API_URL` in client/.env
 
-### Extract Images from PDF
-1. Select "Extract Images" operation
-2. Upload your PDF file
-3. Click "Convert Now"
-4. Download the ZIP file containing all images
+### PDF Conversion Fails
+- Check that all required Python packages are installed
+- Some operations (PDF to Word) may have library compatibility issues
+- See error messages in browser console for details
 
-## 🤝 Contributing
+### File Upload Issues
+- Ensure `backend/uploads` and `backend/outputs` directories exist
+- Check file size is under 50MB limit
+- Verify file format matches operation requirements
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Development Workflow
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. **Start backend:**
+   ```bash
+   cd backend
+   python app.py
+   ```
 
-## 📝 To-Do / Future Enhancements
+2. **In a new terminal, start frontend:**
+   ```bash
+   cd client
+   npm start
+   ```
 
-- [ ] Add user authentication
-- [ ] Implement file compression options
-- [ ] Add PDF encryption/decryption
-- [ ] Support for more file formats (Excel, PowerPoint)
-- [ ] Batch processing with progress tracking
-- [ ] Cloud storage integration (Google Drive, Dropbox)
-- [ ] PDF editing features (rotate, crop, add watermark)
-- [ ] API key system for developers
-- [ ] Mobile app version
+3. **Make changes:**
+   - Frontend: Edit files in `client/src/`
+   - Backend: Edit files in `backend/`, restart server
 
-## 🐛 Known Issues
+4. **Test:**
+   - Frontend hot-reloads automatically
+   - Backend requires manual restart
 
-- Word to PDF conversion requires Microsoft Word on Windows (or use docx2pdf as fallback)
-- Large PDF files may take longer to process
-- Some complex PDF formatting might not be preserved perfectly in conversions
+## Contributing
 
-## 📄 License
+1. Create a feature branch
+2. Make your changes
+3. Test thoroughly
+4. Submit a pull request
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## License
 
-## 👨‍💻 Author
+See LICENSE file for details.
 
-**kRaghuram5**
-- GitHub: [@kRaghuram5](https://github.com/kRaghuram5)
+## Support
 
-## 🙏 Acknowledgments
-
-- PyPDF2 for PDF manipulation
-- PyMuPDF (Fitz) for PDF rendering
-- pdf2docx for PDF to Word conversion
-- Flask community for excellent documentation
-- All contributors and users of this project
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-1. Check the [Issues](https://github.com/kRaghuram5/Python_Toolkit/issues) page
-2. Create a new issue if your problem isn't already listed
-3. Provide detailed information about your problem
-
-## ⭐ Show Your Support
-
-Give a ⭐️ if this project helped you!
-
----
-
-**Made with ❤️ by kRaghuram5** 
+For issues and questions, please create an issue in the repository.

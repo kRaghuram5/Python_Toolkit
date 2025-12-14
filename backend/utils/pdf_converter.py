@@ -47,6 +47,23 @@ except Exception:
     docx2pdf_convert = None
     HAVE_DOCX2PDF = False
 
+try:
+    from pptx import Presentation
+    HAVE_PPTX = True
+except Exception:
+    Presentation = None
+    HAVE_PPTX = False
+
+try:
+    from openpyxl import load_workbook
+    HAVE_OPENPYXL = True
+except Exception:
+    load_workbook = None
+    HAVE_OPENPYXL = False
+
+import subprocess
+import platform
+
 
 def pdf_to_word(pdf_path, output_folder, unique_id):
     """
@@ -432,3 +449,416 @@ def merge_pdfs(pdf_paths, output_folder, unique_id):
         return output_path
     except Exception as e:
         raise Exception(f"PDF merging failed: {str(e)}")
+
+
+def split_pdf(pdf_path, output_folder, unique_id, start_page, end_page):
+    """
+    Extract a range of pages from a PDF file
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+        start_page: Starting page number (1-based)
+        end_page: Ending page number (1-based, inclusive)
+    
+    Returns:
+        Path to the extracted PDF file
+    """
+    try:
+        output_filename = f"{unique_id}_split.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        reader = PyPDF2.PdfReader(pdf_path)
+        writer = PyPDF2.PdfWriter()
+        
+        # Convert to 0-based indexing
+        start = max(0, start_page - 1)
+        end = min(len(reader.pages), end_page)
+        
+        for page_num in range(start, end):
+            writer.add_page(reader.pages[page_num])
+        
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"PDF splitting failed: {str(e)}")
+
+
+def compress_pdf(pdf_path, output_folder, unique_id):
+    """
+    Compress PDF by reducing image quality and content
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the compressed PDF file
+    """
+    if not HAVE_FITZ:
+        raise Exception("PyMuPDF (fitz) is not installed. Install it with: python -m pip install PyMuPDF")
+    
+    try:
+        output_filename = f"{unique_id}_compressed.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        doc = fitz.open(pdf_path)
+        
+        # Compress by reducing content streams
+        for page in doc:
+            # Get all images and compress them
+            for img in page.get_images():
+                xref = img[0]
+                pix = fitz.Pixmap(doc, xref)
+                if pix.n - pix.alpha < 4:  # GRAY or RGB
+                    pix = fitz.Pixmap(fitz.csRGB, pix)
+                pix = pix.shrink(2)  # Reduce resolution
+                pix_data = pix.tobytes("png")
+                pix = fitz.Pixmap(pix_data)
+                doc.update_stream(xref, pix.tobytes("png"))
+                pix = None
+        
+        doc.save(output_path, deflate=True)
+        doc.close()
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"PDF compression failed: {str(e)}")
+
+
+def rotate_pdf(pdf_path, output_folder, unique_id, rotation):
+    """
+    Rotate all pages in a PDF
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+        rotation: Rotation angle (90, 180, or 270 degrees)
+    
+    Returns:
+        Path to the rotated PDF file
+    """
+    try:
+        output_filename = f"{unique_id}_rotated.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        reader = PyPDF2.PdfReader(pdf_path)
+        writer = PyPDF2.PdfWriter()
+        
+        for page in reader.pages:
+            page.rotate(int(rotation))
+            writer.add_page(page)
+        
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"PDF rotation failed: {str(e)}")
+
+
+def add_watermark(pdf_path, output_folder, unique_id, watermark_text):
+    """
+    Add text watermark to all pages in a PDF
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+        watermark_text: Text to add as watermark
+    
+    Returns:
+        Path to the watermarked PDF file
+    """
+    if not HAVE_FITZ:
+        raise Exception("PyMuPDF (fitz) is not installed. Install it with: python -m pip install PyMuPDF")
+    
+    try:
+        output_filename = f"{unique_id}_watermarked.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        doc = fitz.open(pdf_path)
+        
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            # Add watermark text to center of page
+            page.insert_text(
+                (page.rect.width / 2, page.rect.height / 2),
+                watermark_text,
+                fontsize=48,
+                color=(0.7, 0.7, 0.7)  # Light gray color
+            )
+        
+        doc.save(output_path)
+        doc.close()
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"Watermark addition failed: {str(e)}")
+
+
+def remove_pages(pdf_path, output_folder, unique_id, pages_to_remove):
+    """
+    Remove specific pages from a PDF
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+        pages_to_remove: List of page numbers to remove (1-based)
+    
+    Returns:
+        Path to the PDF file with pages removed
+    """
+    try:
+        output_filename = f"{unique_id}_removed.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        reader = PyPDF2.PdfReader(pdf_path)
+        writer = PyPDF2.PdfWriter()
+        
+        # Convert to set of 0-based indices
+        remove_indices = set(int(p) - 1 for p in pages_to_remove)
+        
+        for page_num, page in enumerate(reader.pages):
+            if page_num not in remove_indices:
+                writer.add_page(page)
+        
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"Removing pages failed: {str(e)}")
+
+
+def pdf_to_powerpoint(pdf_path, output_folder, unique_id):
+    """
+    Convert PDF to PowerPoint presentation
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the output PowerPoint file
+    """
+    if not HAVE_PPTX:
+        raise Exception("python-pptx is not installed. Install it with: pip install python-pptx")
+    if not HAVE_FITZ:
+        raise Exception("PyMuPDF (fitz) is not installed. Install it with: pip install PyMuPDF")
+    
+    try:
+        output_filename = f"{unique_id}_converted.pptx"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        # Open PDF and create presentation
+        pdf_doc = fitz.open(pdf_path)
+        presentation = Presentation()
+        
+        # Set slide dimensions to match standard
+        presentation.slide_width = 10 * 914400  # 10 inches in EMUs
+        presentation.slide_height = 7.5 * 914400  # 7.5 inches
+        
+        for page_num in range(len(pdf_doc)):
+            page = pdf_doc[page_num]
+            # Convert page to image
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # High quality
+            
+            # Save temp image
+            img_path = os.path.join(output_folder, f"temp_page_{page_num}.png")
+            pix.save(img_path)
+            
+            # Add blank slide and insert image
+            blank_layout = presentation.slide_layouts[6]  # Blank layout
+            slide = presentation.slides.add_slide(blank_layout)
+            slide.shapes.add_picture(img_path, 0, 0, width=presentation.slide_width, height=presentation.slide_height)
+            
+            # Clean up temp image
+            os.remove(img_path)
+        
+        presentation.save(output_path)
+        pdf_doc.close()
+        return output_path
+    except Exception as e:
+        raise Exception(f"PDF to PowerPoint conversion failed: {str(e)}")
+
+
+def powerpoint_to_pdf(pptx_path, output_folder, unique_id):
+    """
+    Convert PowerPoint to PDF using LibreOffice
+    
+    Args:
+        pptx_path: Path to input PowerPoint file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the output PDF file
+    """
+    try:
+        output_filename = f"{unique_id}_converted.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        # Try using LibreOffice
+        if platform.system() == "Windows":
+            libreoffice_path = "soffice.exe"
+        else:
+            libreoffice_path = "libreoffice"
+        
+        # Convert using LibreOffice
+        subprocess.run([
+            libreoffice_path,
+            "--headless",
+            "--convert-to", "pdf",
+            "--outdir", output_folder,
+            pptx_path
+        ], check=True, capture_output=True)
+        
+        # Find the output PDF (LibreOffice creates it with original filename)
+        base_name = os.path.splitext(os.path.basename(pptx_path))[0]
+        source_pdf = os.path.join(output_folder, f"{base_name}.pdf")
+        
+        if os.path.exists(source_pdf):
+            os.rename(source_pdf, output_path)
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"PowerPoint to PDF conversion failed: {str(e)}")
+
+
+def excel_to_pdf(excel_path, output_folder, unique_id):
+    """
+    Convert Excel to PDF using LibreOffice
+    
+    Args:
+        excel_path: Path to input Excel file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the output PDF file
+    """
+    try:
+        output_filename = f"{unique_id}_converted.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        # Try using LibreOffice
+        if platform.system() == "Windows":
+            libreoffice_path = "soffice.exe"
+        else:
+            libreoffice_path = "libreoffice"
+        
+        # Convert using LibreOffice
+        subprocess.run([
+            libreoffice_path,
+            "--headless",
+            "--convert-to", "pdf",
+            "--outdir", output_folder,
+            excel_path
+        ], check=True, capture_output=True)
+        
+        # Find the output PDF
+        base_name = os.path.splitext(os.path.basename(excel_path))[0]
+        source_pdf = os.path.join(output_folder, f"{base_name}.pdf")
+        
+        if os.path.exists(source_pdf):
+            os.rename(source_pdf, output_path)
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"Excel to PDF conversion failed: {str(e)}")
+
+
+def add_page_numbers(pdf_path, output_folder, unique_id):
+    """
+    Add page numbers to PDF document
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the PDF with page numbers
+    """
+    if not HAVE_FITZ:
+        raise Exception("PyMuPDF (fitz) is not installed. Install it with: pip install PyMuPDF")
+    
+    try:
+        output_filename = f"{unique_id}_numbered.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        pdf_doc = fitz.open(pdf_path)
+        
+        for page_num in range(len(pdf_doc)):
+            page = pdf_doc[page_num]
+            # Insert text at bottom right
+            text = f"{page_num + 1}"
+            rect = page.rect
+            point = fitz.Point(rect.width - 50, rect.height - 30)
+            page.insert_text(point, text, fontsize=10, color=(0, 0, 0))
+        
+        pdf_doc.save(output_path)
+        pdf_doc.close()
+        
+        return output_path
+    except Exception as e:
+        raise Exception(f"Adding page numbers failed: {str(e)}")
+
+
+def repair_pdf(pdf_path, output_folder, unique_id):
+    """
+    Attempt to repair a damaged PDF
+    
+    Args:
+        pdf_path: Path to input PDF file
+        output_folder: Directory to save output file
+        unique_id: Unique identifier for the file
+    
+    Returns:
+        Path to the repaired PDF file
+    """
+    try:
+        output_filename = f"{unique_id}_repaired.pdf"
+        output_path = os.path.join(output_folder, output_filename)
+        
+        # Try PyPDF2 first for simple repair
+        try:
+            reader = PyPDF2.PdfReader(pdf_path)
+            writer = PyPDF2.PdfWriter()
+            
+            # Copy all readable pages
+            for page_num in range(len(reader.pages)):
+                try:
+                    page = reader.pages[page_num]
+                    writer.add_page(page)
+                except:
+                    # Skip problematic pages
+                    pass
+            
+            with open(output_path, 'wb') as output_file:
+                writer.write(output_file)
+            
+            return output_path
+        except:
+            # If PyPDF2 fails, try PyMuPDF
+            if not HAVE_FITZ:
+                raise Exception("Could not repair PDF with available tools")
+            
+            pdf_doc = fitz.open(pdf_path)
+            pdf_doc.save(output_path)
+            pdf_doc.close()
+            
+            return output_path
+    except Exception as e:
+        raise Exception(f"PDF repair failed: {str(e)}")
+
+    except Exception as e:
+        raise Exception(f"Page removal failed: {str(e)}")

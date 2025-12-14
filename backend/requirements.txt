@@ -10,9 +10,18 @@ PyPDF2==3.0.1
 pdf2docx==0.5.8
 PyMuPDF==1.23.8
 
-# Office Document Processing
-python-pptx==0.6.21
-openpyxl==3.10.10
+
+# Image Processing
+Pillow==10.1.0
+
+# Document Generation
+reportlab==4.0.7
+
+# Word to PDF (Windows alternative - cross-platform)
+docx2pdf==0.1.8
+
+# Optional: For Word to PDF on Windows
+# comtypes==1.2.0  # Uncomment if using Windows and have MS Word installed
 
 # Development & Utilities
 python-dotenv==1.0.0
