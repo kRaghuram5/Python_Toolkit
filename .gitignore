@@ -22,11 +22,13 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual Environment (keep only if in specific folder)
 venv/
 env/
 ENV/
 .venv
+backend/venv/
+client/node_modules/
 
 # Flask
 instance/
@@ -34,11 +36,23 @@ instance/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Uploaded and converted files
 uploads/
 outputs/
 temp/
+
+# Test files and PDFs
+test_api.py
+*.pdf
+*.docx
+*.xlsx
+document.pdf
+file1.pdf
+file2.pdf
+Merge_PDF.pdf
 
 # IDE
 .vscode/
@@ -48,6 +62,20 @@ temp/
 *~
 
 # OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Legacy/Duplicate files
+legacy_scripts/
+static/
+UI_UX_IMPROVEMENTS.md
+UI_UX_ENHANCEMENTS.md
+requirements.minimal.txt
+
 .DS_Store
 Thumbs.db
 
