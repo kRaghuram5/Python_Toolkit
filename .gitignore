@@ -96,3 +96,7 @@ output.*
 reversed.pdf
 page_*.png
 page_*_image_*.*
+# Docker
+docker-compose.override.yml
+.docker/
+*.dockerfile

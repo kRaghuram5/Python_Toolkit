@@ -109,6 +109,16 @@ cleanup_thread = threading.Thread(target=cleanup_old_files, daemon=True)
 cleanup_thread.start()
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for Docker and monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'PDF Toolkit API',
+        'timestamp': datetime.now().isoformat()
+    }), 200
+
+
 @app.route('/')
 def index():
     """API information endpoint"""
