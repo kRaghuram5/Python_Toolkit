@@ -69,9 +69,10 @@ const OperationPage = ({ operation }) => {
       if (result.success && result.download_url) {
         addToast('Conversion completed! Downloading...', 'success');
         
-        const filename = result.download_url.split('/').pop();
+        // Extract the blob path from download_url (e.g., outputs/uuid/filename)
+        const blobPath = result.download_url.replace('/api/download/', '');
         setTimeout(() => {
-          downloadFile(filename);
+          downloadFile(blobPath);
         }, 500);
 
         setSelectedFiles([]);

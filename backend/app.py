@@ -11,6 +11,11 @@ import uuid
 from datetime import datetime, timedelta
 import threading
 import time
+from io import BytesIO
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Import utility modules
 from utils.pdf_converter import (
@@ -22,6 +27,9 @@ from utils.pdf_converter import (
     add_page_numbers, repair_pdf
 )
 
+# Import Azure storage utility
+from utils.azure_storage import get_azure_storage
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
@@ -31,7 +39,11 @@ app.config['OUTPUT_FOLDER'] = 'outputs'
 # Enable CORS for API endpoints
 CORS(app)
 
-# Ensure required directories exist
+# Initialize Azure storage if enabled
+USE_AZURE = os.getenv('USE_AZURE_STORAGE', 'false').lower() == 'true'
+azure_storage = get_azure_storage() if USE_AZURE else None
+
+# Ensure required directories exist (for temporary processing)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
@@ -48,6 +60,64 @@ def allowed_file(filename, file_type):
     """Check if file extension is allowed"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS.get(file_type, [])
+
+
+def save_uploaded_file_to_storage(file, unique_id, app_config):
+    """
+    Save uploaded file to Azure ONLY (not permanently locally)
+    Creates temp file for processing, then uploads to Azure
+    Returns: temp filepath for processing
+    """
+    filename = secure_filename(file.filename)
+    local_filepath = os.path.join(app_config['UPLOAD_FOLDER'], f"{unique_id}_{filename}")
+    
+    # Save temporarily for processing
+    file.save(local_filepath)
+    
+    # Upload to Azure
+    if USE_AZURE and azure_storage:
+        try:
+            blob_name = f"uploads/{unique_id}/{filename}"
+            azure_storage.upload_file(local_filepath, blob_name)
+            app.logger.info(f"Uploaded {blob_name} to Azure")
+        except Exception as e:
+            app.logger.error(f"Failed to upload to Azure: {str(e)}")
+            # Continue with processing even if Azure fails (will stay local)
+    
+    # Return temp path for processing (will be deleted after processing)
+    return local_filepath
+
+
+def save_output_file_to_storage(local_filepath, unique_id):
+    """
+    Upload output file to Azure and delete local copy
+    Returns: (local_filename, azure_blob_path) for download
+    """
+    if not local_filepath or not os.path.exists(local_filepath):
+        return None, None
+    
+    filename = os.path.basename(local_filepath)
+    blob_name = f"outputs/{unique_id}/{filename}"
+    
+    # Upload to Azure
+    if USE_AZURE and azure_storage:
+        try:
+            azure_storage.upload_file(local_filepath, blob_name)
+            app.logger.info(f"Uploaded output {blob_name} to Azure")
+        except Exception as e:
+            app.logger.error(f"Failed to upload output to Azure: {str(e)}")
+            # Return local path if Azure fails
+            return filename, None
+    
+    # Delete local file after successfully uploading to Azure
+    try:
+        if os.path.exists(local_filepath):
+            os.remove(local_filepath)
+            app.logger.info(f"Deleted local temp file: {local_filepath}")
+    except Exception as e:
+        app.logger.warning(f"Failed to delete temp file: {str(e)}")
+    
+    return filename, blob_name if USE_AZURE else None
 
 
 def smart_rename_output(output_file, base_name):
@@ -178,12 +248,10 @@ def convert_file():
         base_filename = secure_filename(files[0].filename)
         base_name = os.path.splitext(base_filename)[0]  # Remove extension
         
-        # Save uploaded files
+        # Save uploaded files (to local storage and Azure)
         saved_files = []
         for file in files:
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{filename}")
-            file.save(filepath)
+            filepath = save_uploaded_file_to_storage(file, unique_id, app.config)
             saved_files.append(filepath)
         
         # Perform the requested operation
@@ -300,29 +368,98 @@ def convert_file():
             return jsonify({'error': 'Invalid operation'}), 400
         
         if output_file and os.path.exists(output_file):
+            # Upload output to Azure if enabled
+            filename, blob_name = save_output_file_to_storage(output_file, unique_id)
+            
+            # Clean up input files after processing
+            for saved_file in saved_files:
+                try:
+                    if os.path.exists(saved_file):
+                        os.remove(saved_file)
+                        app.logger.info(f"Deleted temp input file: {saved_file}")
+                except Exception as e:
+                    app.logger.warning(f"Failed to delete input temp file: {str(e)}")
+            
+            # Use Azure blob path for download if available
+            download_path = blob_name if blob_name else filename
+            
             return jsonify({
                 'success': True,
                 'message': 'Conversion completed successfully',
-                'download_url': f'/api/download/{os.path.basename(output_file)}'
+                'download_url': f'/api/download/{download_path}'
             })
         else:
+            # Clean up input files even if conversion failed
+            for saved_file in saved_files:
+                try:
+                    if os.path.exists(saved_file):
+                        os.remove(saved_file)
+                except:
+                    pass
+            
             return jsonify({'error': 'Conversion failed'}), 500
     
     except Exception as e:
         print(f"Error during conversion: {str(e)}")
+        # Try to clean up any temp files
+        try:
+            for saved_file in saved_files:
+                if os.path.exists(saved_file):
+                    os.remove(saved_file)
+        except:
+            pass
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
-
-@app.route('/api/download/<filename>')
-def download_file(filename):
-    """Handle file download requests"""
+@app.route('/api/download/<path:blob_path>')
+def download_file(blob_path):
+    """
+    Download file from Azure or local storage
+    blob_path: format is "outputs/uuid/filename" (azure) or "filename" (local)
+    """
+    temp_path = None
     try:
-        filepath = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+        # Try Azure first if enabled
+        if USE_AZURE and azure_storage:
+            # If blob_path contains /, it's an Azure blob path
+            if '/' in blob_path:
+                try:
+                    # Download from Azure to temp location
+                    temp_filename = os.path.basename(blob_path)
+                    temp_path = os.path.join(app.config['OUTPUT_FOLDER'], f"download_{uuid.uuid4()}_{temp_filename}")
+                    
+                    app.logger.info(f"Downloading {blob_path} from Azure...")
+                    azure_storage.download_file(blob_path, temp_path)
+                    app.logger.info(f"Downloaded {blob_path} from Azure successfully")
+                    
+                    # Send file with cleanup
+                    response = send_file(temp_path, as_attachment=True, download_name=temp_filename)
+                    
+                    # Schedule cleanup after response
+                    def cleanup_temp():
+                        time.sleep(1)
+                        try:
+                            if os.path.exists(temp_path):
+                                os.remove(temp_path)
+                                app.logger.info(f"Cleaned up temp download file: {temp_path}")
+                        except Exception as e:
+                            app.logger.warning(f"Failed to cleanup temp file {temp_path}: {str(e)}")
+                    
+                    cleanup_thread = threading.Thread(target=cleanup_temp, daemon=True)
+                    cleanup_thread.start()
+                    
+                    return response
+                except Exception as e:
+                    app.logger.error(f"Failed to download from Azure: {str(e)}")
+                    return jsonify({'error': f'Failed to download from Azure: {str(e)}'}), 500
+        
+        # Fallback to local storage
+        filepath = os.path.join(app.config['OUTPUT_FOLDER'], os.path.basename(blob_path))
         if os.path.exists(filepath):
             return send_file(filepath, as_attachment=True)
         else:
             return jsonify({'error': 'File not found'}), 404
+            
     except Exception as e:
+        app.logger.error(f"Download error: {str(e)}")
         return jsonify({'error': f'Download failed: {str(e)}'}), 500
 
 

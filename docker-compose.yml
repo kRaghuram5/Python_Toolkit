@@ -15,9 +15,6 @@ services:
       - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
       - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME}
       - USE_AZURE_STORAGE=${USE_AZURE_STORAGE}
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend/outputs:/app/outputs
     networks:
       - propdf-network
     restart: unless-stopped
@@ -53,7 +50,6 @@ services:
 networks:
   propdf-network:
     driver: bridge
-
-volumes:
-  uploads:
-  outputs:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -65,8 +65,9 @@ export const convertFiles = async (files, operation, params = {}) => {
  * Download a converted file
  * @param {string} filename - Name of file to download
  */
-export const downloadFile = (filename) => {
-  const url = `${API_BASE_URL}/api/download/${filename}`;
+export const downloadFile = (blobPath) => {
+  const url = `${API_BASE_URL}/api/download/${blobPath}`;
+  const filename = blobPath.split('/').pop(); // Extract just filename for download name
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
