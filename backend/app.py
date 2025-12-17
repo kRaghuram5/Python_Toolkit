@@ -18,7 +18,7 @@ from utils.pdf_converter import (
     word_to_pdf, text_to_pdf, images_to_pdf,
     extract_images_from_pdf, reverse_pdf, merge_pdfs,
     split_pdf, compress_pdf, rotate_pdf, add_watermark, remove_pages,
-    pdf_to_powerpoint, powerpoint_to_pdf, excel_to_pdf, 
+    pdf_to_powerpoint, 
     add_page_numbers, repair_pdf
 )
 
@@ -40,7 +40,7 @@ ALLOWED_EXTENSIONS = {
     'pdf': ['pdf'],
     'word': ['doc', 'docx'],
     'text': ['txt'],
-    'image': ['png', 'jpg', 'jpeg', 'bmp', 'gif']
+    'image': ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'tiff', 'tif', 'webp', 'svg', 'ico']
 }
 
 
@@ -283,19 +283,6 @@ def convert_file():
                 return jsonify({'error': 'Invalid file type. Please upload a PDF file.'}), 400
             output_file = pdf_to_powerpoint(saved_files[0], app.config['OUTPUT_FOLDER'], unique_id)
             output_file = smart_rename_output(output_file, f"{base_name}_presentation")
-        
-        elif operation == 'powerpoint_to_pdf':
-            if not allowed_file(saved_files[0], 'word'):
-                return jsonify({'error': 'Invalid file type. Please upload a PowerPoint file.'}), 400
-            output_file = powerpoint_to_pdf(saved_files[0], app.config['OUTPUT_FOLDER'], unique_id)
-            output_file = smart_rename_output(output_file, f"{base_name}")
-        
-        elif operation == 'excel_to_pdf':
-            # Check for Excel files
-            if '.' not in saved_files[0] or saved_files[0].rsplit('.', 1)[1].lower() not in ['xls', 'xlsx']:
-                return jsonify({'error': 'Invalid file type. Please upload an Excel file.'}), 400
-            output_file = excel_to_pdf(saved_files[0], app.config['OUTPUT_FOLDER'], unique_id)
-            output_file = smart_rename_output(output_file, f"{base_name}")
         
         elif operation == 'add_page_numbers':
             if not allowed_file(saved_files[0], 'pdf'):
@@ -681,59 +668,6 @@ def pdf_to_powerpoint_endpoint():
         return jsonify({'error': f'Conversion failed: {str(e)}'}), 500
 
 
-@app.route('/api/powerpoint-to-pdf', methods=['POST'])
-def powerpoint_to_pdf_endpoint():
-    """Convert PowerPoint to PDF"""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-        
-        file = request.files['file']
-        unique_id = str(uuid.uuid4())
-        base_name = os.path.splitext(secure_filename(file.filename))[0]
-        
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{file.filename}")
-        file.save(filepath)
-        
-        output_file = powerpoint_to_pdf(filepath, app.config['OUTPUT_FOLDER'], unique_id)
-        output_file = smart_rename_output(output_file, f"{base_name}")
-        
-        return jsonify({
-            'success': True,
-            'message': 'PowerPoint converted to PDF',
-            'download_url': f'/api/download/{os.path.basename(output_file)}'
-        })
-    except Exception as e:
-        print(f"Error converting to PDF: {str(e)}")
-        return jsonify({'error': f'Conversion failed: {str(e)}'}), 500
-
-
-@app.route('/api/excel-to-pdf', methods=['POST'])
-def excel_to_pdf_endpoint():
-    """Convert Excel to PDF"""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-        
-        file = request.files['file']
-        unique_id = str(uuid.uuid4())
-        base_name = os.path.splitext(secure_filename(file.filename))[0]
-        
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{unique_id}_{file.filename}")
-        file.save(filepath)
-        
-        output_file = excel_to_pdf(filepath, app.config['OUTPUT_FOLDER'], unique_id)
-        output_file = smart_rename_output(output_file, f"{base_name}")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Excel converted to PDF',
-            'download_url': f'/api/download/{os.path.basename(output_file)}'
-        })
-    except Exception as e:
-        print(f"Error converting to PDF: {str(e)}")
-        return jsonify({'error': f'Conversion failed: {str(e)}'}), 500
-
 
 @app.route('/api/add-page-numbers', methods=['POST'])
 def add_page_numbers_endpoint():
@@ -920,22 +854,6 @@ def get_operations():
             'description': 'Convert PDF pages to PowerPoint presentation',
             'accepts': 'PDF',
             'produces': 'PPTX',
-            'multiple': False
-        },
-        {
-            'id': 'powerpoint_to_pdf',
-            'name': 'PowerPoint to PDF',
-            'description': 'Convert PowerPoint presentation to PDF',
-            'accepts': 'PPTX',
-            'produces': 'PDF',
-            'multiple': False
-        },
-        {
-            'id': 'excel_to_pdf',
-            'name': 'Excel to PDF',
-            'description': 'Convert Excel spreadsheet to PDF',
-            'accepts': 'XLSX',
-            'produces': 'PDF',
             'multiple': False
         },
         {

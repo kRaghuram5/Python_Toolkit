@@ -12,6 +12,20 @@ const OperationPage = ({ operation }) => {
   const [toasts, setToasts] = useState([]);
   const [operationParams, setOperationParams] = useState({});
 
+  const getAcceptAttribute = (acceptType) => {
+    // Map operation accept types to file extensions
+    const acceptMap = {
+      'PDF': '.pdf',
+      'DOCX': '.docx,.doc',
+      'TXT': '.txt',
+      'Images': '.png,.jpg,.jpeg,.bmp,.gif,.tiff,.tif,.webp,.svg,.ico',
+      'PPTX': '.pptx,.ppt',
+      'XLSX': '.xlsx,.xls',
+      'ZIP': '.zip'
+    };
+    return acceptMap[acceptType] || '*';
+  };
+
   const getIcon = (id) => {
     const icons = {
       pdf_to_word: '📄',
@@ -110,7 +124,7 @@ const OperationPage = ({ operation }) => {
             <FileUploadDropzone
               onFilesSelected={setSelectedFiles}
               maxFiles={operation.multiple ? 10 : 1}
-              accept={operation ? `.${operation.accepts.toLowerCase().replace(/\s+/g, ',.').toLowerCase()}` : '*'}
+              accept={getAcceptAttribute(operation.accepts)}
             />
           </div>
 

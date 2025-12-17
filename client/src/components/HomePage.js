@@ -23,8 +23,6 @@ const HomePage = ({ operations }) => {
       add_watermark: '💧',
       remove_pages: '🗑️',
       pdf_to_powerpoint: '🎯',
-      powerpoint_to_pdf: '📊',
-      excel_to_pdf: '📈',
       add_page_numbers: '🔢',
       repair_pdf: '🔧',
     };

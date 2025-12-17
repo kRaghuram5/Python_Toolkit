@@ -342,7 +342,7 @@ def extract_images_from_pdf(pdf_path, output_folder, unique_id):
 
     try:
         # Create temporary directory for images
-        temp_dir = os.path.join(output_folder, f"{unique_id}_extracted_images")
+        temp_dir = os.path.join(output_folder, f"{unique_id}_temp_images")
         os.makedirs(temp_dir, exist_ok=True)
         
         doc = fitz.open(pdf_path)
@@ -375,17 +375,25 @@ def extract_images_from_pdf(pdf_path, output_folder, unique_id):
         zip_filename = f"{unique_id}_extracted_images.zip"
         zip_path = os.path.join(output_folder, zip_filename)
         
+        # Create ZIP with images
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(temp_dir):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    zipf.write(file_path, arcname=file)
+                    arcname = os.path.relpath(file_path, temp_dir)
+                    zipf.write(file_path, arcname=arcname)
         
         # Clean up temporary directory
         shutil.rmtree(temp_dir)
         
+        # Verify ZIP file exists
+        if not os.path.exists(zip_path):
+            raise Exception(f"Failed to create ZIP file at {zip_path}")
+        
+        print(f"Image extraction successful: {zip_path} ({image_count} images extracted)")
         return zip_path
     except Exception as e:
+        print(f"Image extraction error: {str(e)}")
         raise Exception(f"Image extraction failed: {str(e)}")
 
 
@@ -663,8 +671,8 @@ def pdf_to_powerpoint(pdf_path, output_folder, unique_id):
         presentation = Presentation()
         
         # Set slide dimensions to match standard
-        presentation.slide_width = 10 * 914400  # 10 inches in EMUs
-        presentation.slide_height = 7.5 * 914400  # 7.5 inches
+        presentation.slide_width = int(10 * 914400)  # 10 inches in EMUs
+        presentation.slide_height = int(7.5 * 914400)  # 7.5 inches
         
         for page_num in range(len(pdf_doc)):
             page = pdf_doc[page_num]
@@ -706,6 +714,10 @@ def powerpoint_to_pdf(pptx_path, output_folder, unique_id):
         output_filename = f"{unique_id}_converted.pdf"
         output_path = os.path.join(output_folder, output_filename)
         
+        # Convert to absolute paths
+        pptx_abs = os.path.abspath(pptx_path)
+        output_abs = os.path.abspath(output_folder)
+        
         # Try using LibreOffice
         if platform.system() == "Windows":
             libreoffice_path = "soffice.exe"
@@ -717,13 +729,13 @@ def powerpoint_to_pdf(pptx_path, output_folder, unique_id):
             libreoffice_path,
             "--headless",
             "--convert-to", "pdf",
-            "--outdir", output_folder,
-            pptx_path
+            "--outdir", output_abs,
+            pptx_abs
         ], check=True, capture_output=True)
         
         # Find the output PDF (LibreOffice creates it with original filename)
         base_name = os.path.splitext(os.path.basename(pptx_path))[0]
-        source_pdf = os.path.join(output_folder, f"{base_name}.pdf")
+        source_pdf = os.path.join(output_abs, f"{base_name}.pdf")
         
         if os.path.exists(source_pdf):
             os.rename(source_pdf, output_path)
@@ -749,6 +761,10 @@ def excel_to_pdf(excel_path, output_folder, unique_id):
         output_filename = f"{unique_id}_converted.pdf"
         output_path = os.path.join(output_folder, output_filename)
         
+        # Convert to absolute paths
+        excel_abs = os.path.abspath(excel_path)
+        output_abs = os.path.abspath(output_folder)
+        
         # Try using LibreOffice
         if platform.system() == "Windows":
             libreoffice_path = "soffice.exe"
@@ -760,13 +776,13 @@ def excel_to_pdf(excel_path, output_folder, unique_id):
             libreoffice_path,
             "--headless",
             "--convert-to", "pdf",
-            "--outdir", output_folder,
-            excel_path
+            "--outdir", output_abs,
+            excel_abs
         ], check=True, capture_output=True)
         
         # Find the output PDF
         base_name = os.path.splitext(os.path.basename(excel_path))[0]
-        source_pdf = os.path.join(output_folder, f"{base_name}.pdf")
+        source_pdf = os.path.join(output_abs, f"{base_name}.pdf")
         
         if os.path.exists(source_pdf):
             os.rename(source_pdf, output_path)
