@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './OperationPage.css';
 import FileUploadDropzone from './FileUploadDropzone';
 import OperationParamsForm from './OperationParamsForm';
 import Toast from './Toast';
 import { convertFiles, downloadFile } from '../api';
 
-const OperationPage = ({ operation, onBack }) => {
+const OperationPage = ({ operation }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -88,9 +89,9 @@ const OperationPage = ({ operation, onBack }) => {
 
       {/* Header */}
       <div className="op-page-header">
-        <button className="back-btn" onClick={onBack}>
+        <Link to="/" className="back-btn">
           ← Back
-        </button>
+        </Link>
         <div className="op-page-title">
           <div className="op-page-icon">{getIcon(operation.id)}</div>
           <div className="op-page-info">

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './HomePage.css';
 
-const HomePage = ({ operations, onOperationSelect }) => {
+const HomePage = ({ operations }) => {
   const [conversionDropdown, setConversionDropdown] = useState(false);
   const [allToolsDropdown, setAllToolsDropdown] = useState(false);
 
@@ -35,31 +36,29 @@ const HomePage = ({ operations, onOperationSelect }) => {
     ['pdf_to_word', 'pdf_to_text', 'pdf_to_images', 'word_to_pdf', 'text_to_pdf', 'images_to_pdf'].includes(op.id)
   );
 
-  const handleNavClick = (opId) => {
-    setConversionDropdown(false);
-    setAllToolsDropdown(false);
-    onOperationSelect(opId);
-  };
-
   const OperationBox = ({ operation }) => (
-    <div
+    <Link
+      to={`/${operation.id}`}
       className="op-box"
-      onClick={() => onOperationSelect(operation.id)}
       title={operation.description}
     >
       <div className="op-box-icon">{getIcon(operation.id)}</div>
       <div className="op-box-name">{operation.name}</div>
-    </div>
+    </Link>
   );
 
   const DropdownItem = ({ operation }) => (
-    <div
+    <Link
+      to={`/${operation.id}`}
       className="dropdown-item"
-      onClick={() => handleNavClick(operation.id)}
+      onClick={() => {
+        setConversionDropdown(false);
+        setAllToolsDropdown(false);
+      }}
     >
       <span className="dropdown-icon">{getIcon(operation.id)}</span>
       <span className="dropdown-name">{operation.name}</span>
-    </div>
+    </Link>
   );
 
   return (
@@ -67,21 +66,21 @@ const HomePage = ({ operations, onOperationSelect }) => {
       {/* Navigation Bar */}
       <nav className="nav-bar">
         <div className="nav-container">
-          <div className="logo-nav">ProPDF</div>
+          <Link to="/" className="logo-nav">ProPDF</Link>
 
-          <button
+          <Link
+            to="/merge_pdfs"
             className="nav-link"
-            onClick={() => handleNavClick('merge_pdfs')}
           >
             MERGE PDF
-          </button>
+          </Link>
 
-          <button
+          <Link
+            to="/split_pdf"
             className="nav-link"
-            onClick={() => handleNavClick('split_pdf')}
           >
             SPLIT PDF
-          </button>
+          </Link>
 
           <div className="nav-dropdown"
             onMouseEnter={() => setConversionDropdown(true)}

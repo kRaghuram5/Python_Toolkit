@@ -1,12 +1,84 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import PDFConverter from './components/PDFConverter';
+import HomePage from './components/HomePage';
+import OperationPage from './components/OperationPage';
+import Toast from './components/Toast';
+import { getOperations } from './api';
 
 function App() {
+  const [operations, setOperations] = useState([]);
+  const [toasts, setToasts] = useState([]);
+
+  const fetchOperations = useCallback(async () => {
+    try {
+      const ops = await getOperations();
+      setOperations(ops);
+    } catch (error) {
+      addToast('Failed to load operations. Make sure backend is running.', 'error');
+      console.error('Error:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOperations();
+  }, [fetchOperations]);
+
+  const addToast = (message, type = 'info') => {
+    const id = Math.random();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  };
+
+  const currentOperation = (operationId) => {
+    return operations.find(op => op.id === operationId);
+  };
+
   return (
-    <div className="App">
-      <PDFConverter />
-    </div>
+    <Router>
+      <div className="App">
+        {/* Toast Container */}
+        <div className="toast-container">
+          {toasts.map(toast => (
+            <Toast
+              key={toast.id}
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              duration={3000}
+            />
+          ))}
+        </div>
+
+        <Routes>
+          {/* Home Page */}
+          <Route 
+            path="/" 
+            element={<HomePage operations={operations} />} 
+          />
+          
+          {/* Individual Operation Pages */}
+          {operations.map(op => (
+            <Route 
+              key={op.id}
+              path={`/${op.id}`} 
+              element={
+                currentOperation(op.id) ? (
+                  <OperationPage operation={currentOperation(op.id)} />
+                ) : (
+                  <Navigate to="/" />
+                )
+              } 
+            />
+          ))}
+
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
