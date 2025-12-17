@@ -26,5 +26,8 @@ docx2pdf==0.1.8
 # Development & Utilities
 python-dotenv==1.0.0
 
+# Cloud Storage - Azure Blob Storage
+azure-storage-blob==12.19.0
+
 # Production WSGI Server
 gunicorn==21.2.0

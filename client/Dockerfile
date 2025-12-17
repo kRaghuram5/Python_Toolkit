@@ -22,8 +22,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install curl for health checks and serve for production
-RUN apk add --no-cache curl && npm install -g serve
+# Install serve for production
+RUN npm install -g serve
 
 # Copy built application from builder stage
 COPY --from=builder /app/build ./build
@@ -31,8 +31,8 @@ COPY --from=builder /app/build ./build
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check (using wget which is built-in to alpine)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
 
 # Serve the application
