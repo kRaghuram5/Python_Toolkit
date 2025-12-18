@@ -178,8 +178,7 @@ def pdf_to_images(pdf_path, output_folder, unique_id):
 def word_to_pdf(word_path, output_folder, unique_id):
     """
     Convert Word document to PDF
-    Note: This function uses comtypes which only works on Windows
-    For cross-platform support, consider using LibreOffice or docx2pdf
+    Uses docx2pdf (cross-platform) or comtypes (Windows only)
     
     Args:
         word_path: Path to input Word file
@@ -198,27 +197,32 @@ def word_to_pdf(word_path, output_folder, unique_id):
             try:
                 docx2pdf_convert(word_path, output_path)
                 return output_path
-            except Exception:
+            except Exception as e:
+                # docx2pdf failed, continue to other options
                 pass
         
-        # Fallback to comtypes (Windows only)
-        try:
-            import comtypes.client
-            
-            # Convert to absolute paths
-            word_path_abs = os.path.abspath(word_path)
-            output_path_abs = os.path.abspath(output_path)
-            
-            word = comtypes.client.CreateObject("Word.Application")
-            word.Visible = False
-            doc = word.Documents.Open(word_path_abs)
-            doc.SaveAs(output_path_abs, FileFormat=17)
-            doc.Close()
-            word.Quit()
-            
-            return output_path
-        except Exception as e:
-            raise Exception(f"Word to PDF requires docx2pdf or Microsoft Word. Error: {str(e)}")
+        # Fallback to comtypes (Windows only - skip on Linux/Mac)
+        if platform.system() == "Windows":
+            try:
+                import comtypes.client
+                
+                # Convert to absolute paths
+                word_path_abs = os.path.abspath(word_path)
+                output_path_abs = os.path.abspath(output_path)
+                
+                word = comtypes.client.CreateObject("Word.Application")
+                word.Visible = False
+                doc = word.Documents.Open(word_path_abs)
+                doc.SaveAs(output_path_abs, FileFormat=17)
+                doc.Close()
+                word.Quit()
+                
+                return output_path
+            except Exception as e:
+                pass
+        
+        # If we get here, all methods failed
+        raise Exception("Word to PDF requires docx2pdf library installed. Please ensure python-docx and docx2pdf are properly configured.")
     
     except Exception as e:
         raise Exception(f"Word to PDF conversion failed: {str(e)}")

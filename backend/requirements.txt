@@ -18,7 +18,6 @@ reportlab==4.0.7
 
 # Word to PDF (cross-platform)
 docx2pdf==0.1.8
-comtypes==1.2.0
 
 # PowerPoint Generation
 python-pptx==0.6.21
