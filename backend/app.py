@@ -415,38 +415,25 @@ def download_file(blob_path):
     Download file from Azure or local storage
     blob_path: format is "outputs/uuid/filename" (azure) or "filename" (local)
     """
-    temp_path = None
     try:
         # Try Azure first if enabled
         if USE_AZURE and azure_storage:
             # If blob_path contains /, it's an Azure blob path
             if '/' in blob_path:
                 try:
-                    # Download from Azure to temp location
-                    temp_filename = os.path.basename(blob_path)
-                    temp_path = os.path.join(app.config['OUTPUT_FOLDER'], f"download_{uuid.uuid4()}_{temp_filename}")
-                    
+                    # Download from Azure directly to memory (BytesIO)
+                    filename = os.path.basename(blob_path)
                     app.logger.info(f"Downloading {blob_path} from Azure...")
-                    azure_storage.download_file(blob_path, temp_path)
-                    app.logger.info(f"Downloaded {blob_path} from Azure successfully")
                     
-                    # Send file with cleanup
-                    response = send_file(temp_path, as_attachment=True, download_name=temp_filename)
+                    blob_data = azure_storage.download_blob_to_bytes(blob_path)
+                    app.logger.info(f"Downloaded {blob_path} from Azure successfully ({len(blob_data)} bytes)")
                     
-                    # Schedule cleanup after response
-                    def cleanup_temp():
-                        time.sleep(1)
-                        try:
-                            if os.path.exists(temp_path):
-                                os.remove(temp_path)
-                                app.logger.info(f"Cleaned up temp download file: {temp_path}")
-                        except Exception as e:
-                            app.logger.warning(f"Failed to cleanup temp file {temp_path}: {str(e)}")
-                    
-                    cleanup_thread = threading.Thread(target=cleanup_temp, daemon=True)
-                    cleanup_thread.start()
-                    
-                    return response
+                    # Send file directly from memory without creating temp file
+                    return send_file(
+                        BytesIO(blob_data),
+                        as_attachment=True,
+                        download_name=filename
+                    )
                 except Exception as e:
                     app.logger.error(f"Failed to download from Azure: {str(e)}")
                     return jsonify({'error': f'Failed to download from Azure: {str(e)}'}), 500

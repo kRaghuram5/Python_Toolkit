@@ -82,6 +82,32 @@ class AzureStorageManager:
             logger.error(f"Error downloading file: {str(e)}")
             raise
 
+    def download_blob_to_bytes(self, blob_name: str):
+        """
+        Download a blob and return as bytes
+        
+        Args:
+            blob_name: Name/path in blob storage
+            
+        Returns:
+            BytesIO object containing blob data
+        """
+        try:
+            blob_client = self.blob_service_client.get_blob_client(
+                container=self.container_name, 
+                blob=blob_name
+            )
+            
+            blob_data = blob_client.download_blob().readall()
+            logger.info(f"Downloaded {blob_name} from Azure to memory")
+            return blob_data
+        except AzureError as e:
+            logger.error(f"Azure error downloading {blob_name}: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Error downloading blob to bytes: {str(e)}")
+            raise
+
     def delete_file(self, blob_name: str) -> None:
         """
         Delete a file from Azure Blob Storage

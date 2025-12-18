@@ -497,7 +497,7 @@ def split_pdf(pdf_path, output_folder, unique_id, start_page, end_page):
 
 def compress_pdf(pdf_path, output_folder, unique_id):
     """
-    Compress PDF by reducing image quality and content
+    Compress PDF by removing redundant streams and optimizing content
     
     Args:
         pdf_path: Path to input PDF file
@@ -516,21 +516,9 @@ def compress_pdf(pdf_path, output_folder, unique_id):
         
         doc = fitz.open(pdf_path)
         
-        # Compress by reducing content streams
-        for page in doc:
-            # Get all images and compress them
-            for img in page.get_images():
-                xref = img[0]
-                pix = fitz.Pixmap(doc, xref)
-                if pix.n - pix.alpha < 4:  # GRAY or RGB
-                    pix = fitz.Pixmap(fitz.csRGB, pix)
-                pix = pix.shrink(2)  # Reduce resolution
-                pix_data = pix.tobytes("png")
-                pix = fitz.Pixmap(pix_data)
-                doc.update_stream(xref, pix.tobytes("png"))
-                pix = None
-        
-        doc.save(output_path, deflate=True)
+        # Compress by saving with deflate compression
+        # This removes redundant content and applies stream compression
+        doc.save(output_path, deflate=True, garbage=4)
         doc.close()
         
         return output_path
