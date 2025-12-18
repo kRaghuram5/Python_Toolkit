@@ -79,7 +79,7 @@ jobs:
       - name: Build Docker image (Frontend)
         run: docker build -t propdf-frontend:${{ github.sha }} ./client
 
-  # Docker Compose Test
+  # Docker Compose Test (skip for now since using pre-built images)
   docker-compose-test:
     runs-on: ubuntu-latest
     name: Docker Compose Integration Test
@@ -91,16 +91,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
+      - name: Build backend image for testing
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          load: true
+          tags: ghcr.io/kraghuram5/pdfizz-backend:latest
+      
+      - name: Build frontend image for testing
+        uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          push: false
+          load: true
+          tags: ghcr.io/kraghuram5/pdfizz-frontend:latest
+      
       - name: Install Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       
-      - name: Build images
-        run: docker-compose build
-      
       - name: Start services
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
+          AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
+          USE_AZURE_STORAGE: "true"
         run: docker-compose up -d
       
       - name: Wait for services to be healthy
@@ -125,10 +143,10 @@ jobs:
         if: always()
         run: docker-compose down
 
-  # Build and Push Images (only on main branch)
+  # Build and Push Images to ghcr.io (only on main branch)
   push-images:
     runs-on: ubuntu-latest
-    name: Push Docker Images
+    name: Push Docker Images to ghcr.io
     needs: [docker-compose-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
@@ -138,26 +156,27 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Build and push backend
+      - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/propdf-backend:latest
-            ${{ secrets.DOCKER_USERNAME }}/propdf-backend:${{ github.sha }}
+            ghcr.io/kraghuram5/pdfizz-backend:latest
+            ghcr.io/kraghuram5/pdfizz-backend:${{ github.sha }}
       
-      - name: Build and push frontend
+      - name: Build and push frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./client
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/propdf-frontend:latest
-            ${{ secrets.DOCKER_USERNAME }}/propdf-frontend:${{ github.sha }}
+            ghcr.io/kraghuram5/pdfizz-frontend:latest
+            ghcr.io/kraghuram5/pdfizz-frontend:${{ github.sha }}
