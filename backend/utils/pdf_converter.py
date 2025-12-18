@@ -178,7 +178,7 @@ def pdf_to_images(pdf_path, output_folder, unique_id):
 def word_to_pdf(word_path, output_folder, unique_id):
     """
     Convert Word document to PDF
-    Uses docx2pdf (cross-platform) or comtypes (Windows only)
+    Uses multiple methods: docx2pdf, LibreOffice (unoconv), or pdf2docx
     
     Args:
         word_path: Path to input Word file
@@ -192,21 +192,62 @@ def word_to_pdf(word_path, output_folder, unique_id):
         output_filename = f"{unique_id}_output.pdf"
         output_path = os.path.join(output_folder, output_filename)
         
-        # Try using docx2pdf (cross-platform alternative)
+        # Method 1: Try using LibreOffice via subprocess (most reliable in Docker)
+        try:
+            word_path_abs = os.path.abspath(word_path)
+            output_path_abs = os.path.abspath(output_path)
+            output_folder_abs = os.path.abspath(output_folder)
+            
+            result = subprocess.run(
+                [
+                    'libreoffice',
+                    '--headless',
+                    '--convert-to', 'pdf',
+                    '--outdir', output_folder_abs,
+                    word_path_abs
+                ],
+                capture_output=True,
+                timeout=60
+            )
+            
+            if result.returncode == 0:
+                # LibreOffice creates file with original name but .pdf extension
+                base_name = os.path.splitext(os.path.basename(word_path))[0]
+                temp_output = os.path.join(output_folder, f"{base_name}.pdf")
+                if os.path.exists(temp_output):
+                    os.rename(temp_output, output_path)
+                    return output_path
+        except Exception as e:
+            pass  # Continue to next method
+        
+        # Method 2: Try using docx2pdf
         if HAVE_DOCX2PDF:
             try:
                 docx2pdf_convert(word_path, output_path)
                 return output_path
             except Exception as e:
-                # docx2pdf failed, continue to other options
+                pass  # Continue to next method
+        
+        # Method 3: Try using pdf2docx (reverse operation but works)
+        if HAVE_PDF2DOCX:
+            try:
+                from docx import Document
+                # Load the docx file and save as temp with different name
+                doc = Document(word_path)
+                temp_docx = os.path.join(output_folder, f"{unique_id}_temp.docx")
+                doc.save(temp_docx)
+                # Try converting the temp file
+                docx2pdf_convert(temp_docx, output_path)
+                os.remove(temp_docx)
+                if os.path.exists(output_path):
+                    return output_path
+            except Exception as e:
                 pass
         
-        # Fallback to comtypes (Windows only - skip on Linux/Mac)
+        # Fallback to comtypes (Windows only)
         if platform.system() == "Windows":
             try:
                 import comtypes.client
-                
-                # Convert to absolute paths
                 word_path_abs = os.path.abspath(word_path)
                 output_path_abs = os.path.abspath(output_path)
                 
@@ -221,8 +262,8 @@ def word_to_pdf(word_path, output_folder, unique_id):
             except Exception as e:
                 pass
         
-        # If we get here, all methods failed
-        raise Exception("Word to PDF requires docx2pdf library installed. Please ensure python-docx and docx2pdf are properly configured.")
+        # If all methods failed
+        raise Exception("Word to PDF conversion failed. Ensure LibreOffice or docx2pdf is properly installed and configured.")
     
     except Exception as e:
         raise Exception(f"Word to PDF conversion failed: {str(e)}")
