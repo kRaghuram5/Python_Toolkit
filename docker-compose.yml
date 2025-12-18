@@ -1,9 +1,7 @@
 services:
   # Backend Service
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/kraghuram5/pdfizz-backend:latest
     container_name: propdf-backend
     ports:
       - "5000:5000"
@@ -27,9 +25,7 @@ services:
 
   # Frontend Service
   frontend:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
+    image: ghcr.io/kraghuram5/pdfizz-frontend:latest
     container_name: propdf-frontend
     ports:
       - "3000:3000"
