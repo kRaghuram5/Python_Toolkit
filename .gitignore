@@ -43,7 +43,7 @@ instance/
 uploads/
 outputs/
 temp/
-
+important.txt
 # Test files and PDFs
 test_api.py
 *.pdf
